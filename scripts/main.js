@@ -1,5 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 1. ส่วนของ DOM Elements ---
+    // --- 1. การตั้งค่า Firebase ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyC452vdQ6_77OWElN6vvEbAzn_lA4DvPk0",
+        authDomain: "beit67.firebaseapp.com",
+        projectId: "beit67",
+        storageBucket: "beit67.appspot.com",
+        messagingSenderId: "909474812266",
+        appId: "1:909474812266:web:c69149ad52c43085441513",
+        measurementId: "G-SFPMXYCJNG"
+    };
+
+    // Initialize Firebase (ใช้เวอร์ชัน Compat ที่โหลดใน HTML)
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // --- 2. ส่วนของ DOM Elements ---
     const loginScreen = document.getElementById('login-screen');
     const appContainer = document.getElementById('app-container');
     const loginForm = document.getElementById('login-form');
@@ -32,33 +47,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewingUserName = document.getElementById('viewing-user-name');
     const exitViewerModeBtn = document.getElementById('exit-viewer-mode-btn');
 
-    // --- 2. State Variables ---
+    // --- 3. State Variables ---
     let currentUser = null;
     let blockIdCounter = 0;
     let ghostBlock = null;
 
-    // --- 3. ฟังก์ชันจัดการข้อมูล (CRUD + LocalStorage) ---
-    function saveScheduleToLocalStorage() {
+    // --- 4. ฟังก์ชันจัดการข้อมูล (CRUD + Firestore) ---
+    async function saveScheduleToFirestore() {
         if (!currentUser) return;
-        const dataKey = `scheduleApp_${currentUser}`;
         const allBlocks = document.querySelectorAll('.class-block');
         const scheduleData = Array.from(allBlocks).map(block => ({ ...block.dataset }));
-        localStorage.setItem(dataKey, JSON.stringify(scheduleData));
+        const userDocRef = db.collection('users').doc(currentUser);
+        try {
+            await userDocRef.set({ schedule: scheduleData });
+            console.log("Schedule saved for", currentUser);
+        } catch (error) {
+            console.error("Error saving schedule: ", error);
+            alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        }
     }
 
-    function loadScheduleFromLocalStorage(userId) {
-        scheduleBody.querySelectorAll('.class-block').forEach(block => block.remove()); // เคลียร์บอร์ดก่อน
-        const dataKey = `scheduleApp_${userId}`;
-        const savedData = localStorage.getItem(dataKey);
-        if (savedData) {
-            const scheduleData = JSON.parse(savedData);
-            let maxId = 0;
-            scheduleData.forEach(data => {
-                createClassBlock(data);
-                const idNum = parseInt(data.id.split('-').pop());
-                if (idNum > maxId) maxId = idNum;
-            });
-            blockIdCounter = maxId;
+    async function loadScheduleFromFirestore(userId) {
+        scheduleBody.querySelectorAll('.class-block').forEach(block => block.remove());
+        const userDocRef = db.collection('users').doc(userId);
+        try {
+            const doc = await userDocRef.get();
+            if (doc.exists) {
+                const data = doc.data();
+                const scheduleData = data.schedule || [];
+                let maxId = 0;
+                scheduleData.forEach(item => {
+                    createClassBlock(item);
+                    const idNum = parseInt(item.id.split('-').pop());
+                    if (idNum > maxId) maxId = idNum;
+                });
+                blockIdCounter = maxId;
+            } else {
+                console.log("No schedule found for this user, creating a new one.");
+                blockIdCounter = 0;
+            }
+        } catch (error) {
+            console.error("Error loading schedule: ", error);
+            alert("เกิดข้อผิดพลาดในการโหลดข้อมูล");
         }
     }
 
@@ -84,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         targetCell.appendChild(block);
     }
 
-    // --- 4. ฟังก์ชันจัดการ UI และ Event Listeners ---
+    // --- 5. ฟังก์ชันจัดการ UI และ Event Listeners ---
     const openModal = () => modal.classList.add('show');
     const closeModal = () => {
         modal.classList.remove('show');
@@ -100,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     closeBtn.addEventListener('click', closeModal);
     
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const startTimeStr = document.getElementById('start-time').value;
         const endTimeStr = document.getElementById('end-time').value;
@@ -123,16 +153,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (editingBlockId) document.getElementById(editingBlockId)?.remove();
         createClassBlock(classData);
         closeModal();
-        saveScheduleToLocalStorage();
+        await saveScheduleToFirestore();
         updateCountdown();
     });
 
-    deleteBtn.addEventListener('click', () => {
+    deleteBtn.addEventListener('click', async () => {
         const editingBlockId = document.getElementById('editing-block-id').value;
         if (editingBlockId && confirm('คุณต้องการลบรายวิชานี้ใช่หรือไม่?')) {
             document.getElementById(editingBlockId)?.remove();
             closeModal();
-            saveScheduleToLocalStorage();
+            await saveScheduleToFirestore();
             updateCountdown();
         }
     });
@@ -153,10 +183,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 5. ระบบ Countdown Timer ---
+    // --- 4. ระบบ Countdown Timer ---
     function updateCountdown() {
         const now = new Date();
-        const todayDay = now.getDay() === 0 ? 7 : now.getDay();
+        const todayDay = now.getDay() === 0 ? 7 : now.getDay(); // จันทร์=1, อาทิตย์=7
+
         const allClassesToday = Array.from(document.querySelectorAll('.class-block'))
             .map(block => {
                 const [startH, startM] = block.dataset.startTime.split(':');
@@ -170,25 +201,26 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .filter(cls => cls.day === todayDay)
             .sort((a, b) => a.startTime - b.startTime);
+
         let currentClass = allClassesToday.find(cls => now >= cls.startTime && now < cls.endTime);
         let nextClass = allClassesToday.find(cls => now < cls.startTime);
+
         if (currentClass) {
-            currentClassContainer.classList.remove('hidden');
+            countdownContainer.classList.remove('idle');
             const diff = currentClass.endTime - now;
             const { hours, minutes, seconds } = formatTime(diff);
-            currentClassTitle.textContent = `"${currentClass.name}" สิ้นสุดใน`;
-            currentClassTimer.textContent = `${hours}:${minutes}:${seconds}`;
-        } else {
-            currentClassContainer.classList.add('hidden');
-        }
-        if (nextClass) {
-            nextClassContainer.classList.remove('hidden');
+            countdownTitle.textContent = `วิชา "${currentClass.name}" จะสิ้นสุดใน`;
+            countdownTimer.textContent = `${hours}:${minutes}:${seconds}`;
+        } else if (nextClass) {
+            countdownContainer.classList.remove('idle');
             const diff = nextClass.startTime - now;
             const { hours, minutes, seconds } = formatTime(diff);
-            nextClassTitle.textContent = `"${nextClass.name}" เริ่มใน`;
-            nextClassTimer.textContent = `${hours}:${minutes}:${seconds}`;
+            countdownTitle.textContent = `วิชาถัดไป "${nextClass.name}" จะเริ่มใน`;
+            countdownTimer.textContent = `${hours}:${minutes}:${seconds}`;
         } else {
-            nextClassContainer.classList.add('hidden');
+            countdownContainer.classList.add('idle');
+            countdownTitle.textContent = 'สิ้นสุดชั้นเรียนสำหรับวันนี้';
+            countdownTimer.textContent = 'พักผ่อนได้!';
         }
     }
 
@@ -201,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return { hours, minutes, seconds };
     }
     
-    // --- 6. ระบบ Drag & Drop ด้วย Interact.js ---
+    // --- 7. ระบบ Drag & Drop ด้วย Interact.js ---
     function initializeDragAndDrop() {
         interact('.class-block').draggable({
             listeners: {
@@ -268,11 +300,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 7. ระบบแชร์ (Share System) ---
+    // --- 8. ระบบแชร์ (Share System) ---
     shareBtn.addEventListener('click', () => {
-        const dataKey = `scheduleApp_${currentUser}`;
-        const scheduleData = localStorage.getItem(dataKey) || '[]';
-        const encodedData = btoa(unescape(encodeURIComponent(scheduleData))); // Handle UTF-8 characters
+        const allBlocks = document.querySelectorAll('.class-block');
+        const scheduleData = Array.from(allBlocks).map(block => ({ ...block.dataset }));
+        const jsonString = JSON.stringify(scheduleData);
+        const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
         const shareUrl = `${window.location.origin}${window.location.pathname}?view=${encodedData}&user=${encodeURIComponent(currentUser)}`;
         shareUrlInput.value = shareUrl;
         shareModal.querySelector('.close-btn').onclick = () => shareModal.classList.remove('show');
@@ -290,8 +323,8 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `${window.location.origin}${window.location.pathname}`;
     });
 
-    // --- 8. หัวใจหลัก: ระบบจัดการ User Session และการเริ่มต้นแอป ---
-    function init() {
+    // --- 9. หัวใจหลัก: ระบบจัดการ User Session และการเริ่มต้นแอป ---
+    async function init() {
         const urlParams = new URLSearchParams(window.location.search);
         const viewData = urlParams.get('view');
         const viewingUser = urlParams.get('user');
@@ -320,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 loginScreen.style.display = 'none';
                 appContainer.style.display = 'block';
                 currentUserDisplay.textContent = currentUser;
-                loadScheduleFromLocalStorage(currentUser);
+                await loadScheduleFromFirestore(currentUser);
                 setInterval(updateCountdown, 1000);
                 updateCountdown();
                 initializeDragAndDrop();
@@ -347,6 +380,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // เริ่มการทำงานของแอปพลิเคชัน
+    // ** เริ่มการทำงานของแอปพลิเคชัน **
     init();
+    
+    // *** หมายเหตุ: คัดลอกโค้ดส่วนที่ไม่ได้แสดงในที่นี้จากไฟล์ล่าสุดมาทั้งหมด ***
 });

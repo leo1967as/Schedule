@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
         measurementId: "G-SFPMXYCJNG"
     };
 
-    // Initialize Firebase (ใช้เวอร์ชัน Compat ที่โหลดใน HTML)
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -21,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const userIdInput = document.getElementById('user-id-input');
     const currentUserDisplay = document.getElementById('current-user-display');
     const logoutBtn = document.getElementById('logout-btn');
+    const editModeSwitch = document.getElementById('edit-mode-switch');
     
     const modal = document.getElementById('add-class-modal');
     const addClassBtn = document.getElementById('add-class-btn');
@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentUser = null;
     let blockIdCounter = 0;
     let ghostBlock = null;
+    let isEditMode = false;
 
     // --- 4. ฟังก์ชันจัดการข้อมูล (CRUD + Firestore) ---
     async function saveScheduleToFirestore() {
@@ -104,7 +105,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const block = document.createElement('div');
         block.id = data.id;
         block.className = `class-block ${data.colorClass}`;
-        block.innerHTML = `<strong><h4>${data.name}</strong><span>${data.startTime} - ${data.endTime}</span><br><span>${data.location}</span>`;
+        // **แก้ไข HTML ให้ถูกต้อง: ปิดแท็ก strong และ h4**
+        block.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center;">
+            <strong><h3 style="margin: 0;">${data.name}</h3></strong>
+            <span>${data.startTime} - ${data.endTime}</span>
+            <span>${data.location || ''}</span>
+            </div>
+        `;
         Object.assign(block.dataset, data);
         const cellHeight = 67;
         const topPosition = (startMinute / 60) * cellHeight;
@@ -168,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     tableContainer.addEventListener('click', (e) => {
+        if (!isEditMode) return; 
         const block = e.target.closest('.class-block');
         if (block) {
             const data = block.dataset;
@@ -194,47 +203,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 return {
                     name: block.dataset.name,
                     day: parseInt(block.dataset.day),
+                    location: block.dataset.location,
                     startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), startH, startM),
                     endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM)
-                    
                 };
             })
             .filter(cls => cls.day === todayDay)
             .sort((a, b) => a.startTime - b.startTime);
         let currentClass = allClassesToday.find(cls => now >= cls.startTime && now < cls.endTime);
         let nextClass = allClassesToday.find(cls => now < cls.startTime);
-        // โค้ดใหม่
         if (currentClass) {
             currentClassContainer.classList.remove('hidden');
             const diff = currentClass.endTime - now;
             const { hours, minutes, seconds } = formatTime(diff);
-            
-            // **สร้าง HTML ที่มีรายละเอียด**
-            currentClassTitle.innerHTML = `
-                <div class="countdown-subject-info">
-                    <strong>${currentClass.name}<br></strong>
-                    <span>${currentClass.startTime.toTimeString().substring(0, 5)} - ${currentClass.endTime.toTimeString().substring(0, 5)}</span>
-                </div>
-                <small>จะสิ้นสุดใน</small>
-            `;
+            currentClassTitle.innerHTML = `<div class="countdown-subject-info"><strong>${currentClass.name}</strong><span><br>${currentClass.startTime.toTimeString().substring(0, 5)} - ${currentClass.endTime.toTimeString().substring(0, 5)}</span><span><br> > ${currentClass.location || ''}</span></div><small>จะสิ้นสุดใน</small>`;
             currentClassTimer.textContent = `${hours}:${minutes}:${seconds}`;
         } else {
             currentClassContainer.classList.add('hidden');
         }
-
         if (nextClass) {
             nextClassContainer.classList.remove('hidden');
             const diff = nextClass.startTime - now;
             const { hours, minutes, seconds } = formatTime(diff);
-
-            // **สร้าง HTML ที่มีรายละเอียด**
-            nextClassTitle.innerHTML = `
-                <div class="countdown-subject-info">
-                    <strong>${nextClass.name}<br></strong>
-                    <span>${nextClass.startTime.toTimeString().substring(0, 5)} - ${nextClass.endTime.toTimeString().substring(0, 5)}</span>
-                </div>
-                <small>จะเริ่มใน</small>
-            `;
+            nextClassTitle.innerHTML = `<div class="countdown-subject-info"><strong>${nextClass.name}</strong><span><br>${nextClass.startTime.toTimeString().substring(0, 5)} - ${nextClass.endTime.toTimeString().substring(0, 5)}</span><span><br> > ${nextClass.location || ''}</span></div><small>จะเริ่มใน</small>`;
             nextClassTimer.textContent = `${hours}:${minutes}:${seconds}`;
         } else {
             nextClassContainer.classList.add('hidden');
@@ -341,13 +332,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- 9. หัวใจหลัก: ระบบจัดการ User Session และการเริ่มต้นแอป ---
+    
+    // **ฟังก์ชันสำหรับสลับโหมด View/Edit**
+    function setEditMode(enabled) {
+        isEditMode = enabled;
+        appContainer.classList.toggle('view-mode', !enabled);
+        appContainer.classList.toggle('edit-mode', enabled);
+
+        // **แก้ไขวิธีการเปิด/ปิด Drag & Drop ที่ปลอดภัยกว่า**
+        // เราจะตั้งค่า draggable ใหม่ทั้งหมดเมื่อมีการสลับโหมด
+        initializeDragAndDrop(); 
+        interact('.class-block').draggable(enabled);
+        
+        editModeSwitch.checked = enabled;
+    }
+
+    editModeSwitch.addEventListener('change', (event) => {
+        setEditMode(event.target.checked);
+    });
+
     async function init() {
         const urlParams = new URLSearchParams(window.location.search);
         const viewData = urlParams.get('view');
         const viewingUser = urlParams.get('user');
 
         if (viewData) {
-            // เข้าสู่โหมดอ่านอย่างเดียว (Viewer Mode)
             appContainer.classList.add('read-only');
             loginScreen.style.display = 'none';
             appContainer.style.display = 'block';
@@ -364,16 +373,19 @@ document.addEventListener('DOMContentLoaded', () => {
             setInterval(updateCountdown, 1000);
             updateCountdown();
         } else {
-            // เข้าสู่โหมดผู้ใช้ปกติ (User Mode)
             currentUser = localStorage.getItem('currentScheduleAppUser');
             if (currentUser) {
                 loginScreen.style.display = 'none';
                 appContainer.style.display = 'block';
                 currentUserDisplay.textContent = currentUser;
+                
                 await loadScheduleFromFirestore(currentUser);
+                
+                // **เริ่มต้นแอปใน View Mode เสมอ**
+                setEditMode(false); 
+                
                 setInterval(updateCountdown, 1000);
                 updateCountdown();
-                initializeDragAndDrop();
             } else {
                 loginScreen.style.display = 'flex';
                 appContainer.style.display = 'none';

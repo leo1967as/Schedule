@@ -451,3 +451,42 @@ h1 {
     cursor: default;
     pointer-events: none;
 }
+
+/* ... สไตล์อื่นๆ เหมือนเดิม ... */
+
+/* ****** 7. สไตล์สำหรับสวิตช์โหมดแก้ไข และการควบคุมสถานะ ****** */
+
+/* สวิตช์ Toggle สำหรับโหมดแก้ไข */
+.edit-mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.edit-mode-toggle label {
+    font-size: 0.9rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+#edit-mode-switch {
+    cursor: pointer;
+}
+
+/* --- การควบคุมสถานะ View/Edit Mode --- */
+
+/* ในโหมดปกติ (View Mode) ให้บล็อกคลิกไม่ได้ */
+.view-mode .class-block {
+    cursor: default;
+    pointer-events: none;
+}
+
+/* ในโหมดปกติ (View Mode) ให้ซ่อนปุ่มเพิ่มวิชา */
+.view-mode #add-class-btn {
+    display: none;
+}
+
+/* ในโหมดปกติ (View Mode) ให้ปุ่มแชร์และออกจากระบบดูเด่นขึ้น */
+.view-mode .user-session-info {
+    background-color: #e0e7ff; /* เปลี่ยนสีพื้นหลังเล็กน้อย */
+}

@@ -8,6 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0056b3"/>
 </head>
 <body>
 
@@ -40,6 +45,7 @@
                 <span>สำหรับ: <strong id="current-user-display"></strong></span>
                 <button id="share-btn" class="button-secondary share">แชร์</button>
                 <button id="logout-btn" class="button-secondary">Switch User</button>
+    <button id="notifications-btn" class="button-secondary notification">เปิดการแจ้งเตือน</button>
 
 
                         <!-- แผงข้อมูลที่จะบรรจุ Countdown ทั้งสอง -->
@@ -160,9 +166,19 @@
 <!-- Firebase SDK (Compat version) -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+
 <!-- Interact.js -->
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <!-- Your App's Script -->
 <script src="scripts/main.js"></script>
+
+<script>               if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Service worker registered.', reg))
+                    .catch(err => console.log('Service worker registration failed: ', err));
+            });
+        }</script>
 </body>
 </html>

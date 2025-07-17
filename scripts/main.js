@@ -47,11 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewingUserName = document.getElementById('viewing-user-name');
     const exitViewerModeBtn = document.getElementById('exit-viewer-mode-btn');
 
+    const notificationsBtn = document.getElementById('notifications-btn');
+
     // --- 3. State Variables ---
     let currentUser = null;
     let blockIdCounter = 0;
     let ghostBlock = null;
     let isEditMode = false;
+    let messaging = null;
 
     // --- 4. ฟังก์ชันจัดการข้อมูล (CRUD + Firestore) ---
     async function saveScheduleToFirestore() {
@@ -380,7 +383,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentUserDisplay.textContent = currentUser;
                 
                 await loadScheduleFromFirestore(currentUser);
-                
+                        await setupNotifications(); 
+
                 // **เริ่มต้นแอปใน View Mode เสมอ**
                 setEditMode(false); 
                 
@@ -392,6 +396,79 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+
+    // --- 5. ฟังก์ชันจัดการ UI และ Event Listeners ---
+
+// **ฟังก์ชันใหม่: จัดการการขออนุญาต Notification**
+async function setupNotifications() {
+    messaging = firebase.messaging();
+
+    // 1. ขอ Token จากเบราว์เซอร์
+    try {
+        const currentToken = await messaging.getToken({ vapidKey: 'BCj5cczKbYfHuJnCKjZ3hLsa4DpIMD6r_S7dNbNVr5pKqUw1oMv_V0F_ujv4XeH5QG8kwZSOb6augSU6Ya-k0HE	' }); // **สำคัญมาก!**
+        if (currentToken) {
+            console.log('FCM Token:', currentToken);
+            // 2. ส่ง Token ไปบันทึกที่ Firestore
+            await saveTokenToFirestore(currentToken);
+            // 3. อัปเดต UI
+            updateNotificationButton(true);
+        } else {
+            // ผู้ใช้ยังไม่ได้ให้สิทธิ์
+            console.log('No registration token available. Request permission to generate one.');
+            updateNotificationButton(false);
+        }
+    } catch (err) {
+        console.error('An error occurred while retrieving token. ', err);
+        notificationsBtn.textContent = 'การแจ้งเตือนมีปัญหา';
+        notificationsBtn.disabled = true;
+    }
+}
+
+// **ฟังก์ชันใหม่: บันทึก Token ลง Firestore**
+async function saveTokenToFirestore(token) {
+    if (!currentUser) return;
+    const userDocRef = db.collection('users').doc(currentUser);
+    try {
+        // ใช้ arrayUnion เพื่อเพิ่ม Token ใหม่เข้าไปโดยไม่ซ้ำกับของเดิม
+        await userDocRef.update({
+            notificationTokens: firebase.firestore.FieldValue.arrayUnion(token)
+        });
+        console.log('Token saved to Firestore.');
+    } catch (error) {
+        // ถ้ายังไม่มี document หรือ field นี้ ให้สร้างใหม่
+        if (error.code === 'not-found' || error.code === 'invalid-argument') {
+            await userDocRef.set({
+                notificationTokens: [token]
+            }, { merge: true });
+            console.log('Token field created and token saved.');
+        } else {
+            console.error('Error saving token: ', error);
+        }
+    }
+}
+
+// **ฟังก์ชันใหม่: อัปเดตหน้าตาปุ่ม**
+function updateNotificationButton(isSubscribed) {
+    if (isSubscribed) {
+        notificationsBtn.textContent = 'ปิดการแจ้งเตือน';
+        notificationsBtn.disabled = true; // ทำให้เป็นแบบ One-way subscribe ก่อนเพื่อความง่าย
+    } else {
+        notificationsBtn.textContent = 'เปิดการแจ้งเตือน';
+        notificationsBtn.disabled = false;
+    }
+}
+
+// **เพิ่ม Event Listener ให้ปุ่ม**
+notificationsBtn.addEventListener('click', async () => {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+        console.log('Notification permission granted.');
+        await setupNotifications();
+    } else {
+        console.log('Unable to get permission to notify.');
+        alert('คุณต้องอนุญาตการแจ้งเตือนในตั้งค่าของเบราว์เซอร์');
+    }
+});
 
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();

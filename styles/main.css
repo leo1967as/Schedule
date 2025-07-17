@@ -490,3 +490,19 @@ h1 {
 .view-mode .user-session-info {
     background-color: #e0e7ff; /* เปลี่ยนสีพื้นหลังเล็กน้อย */
 }
+
+/* เพิ่มในส่วนของ .button-secondary */
+.button-secondary.notification {
+    background-color: #ffc107; /* สีเหลือง */
+    color: #212529;
+}
+.button-secondary.notification:hover {
+    background-color: #e0a800;
+}
+
+/* สไตล์เมื่อปุ่มถูกปิดใช้งาน */
+.button-secondary:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+}

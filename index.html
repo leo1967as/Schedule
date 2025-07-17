@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตารางเรียน (Drag & Drop)</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <h1>ตารางเรียน ภาคเรียนที่ 1/2568</h1>
+        <button id="add-class-btn" class="button-primary">เพิ่มรายวิชา +</button>
+    </header>
+
+    <main>
+        <div class="table-container">
+            <table class="schedule-table" id="schedule-table">
+                <thead>
+                    <tr>
+                        <th>เวลา</th>
+                        <th data-day="1">จันทร์</th>
+                        <th data-day="2">อังคาร</th>
+                        <th data-day="3">พุธ</th>
+                        <th data-day="4">พฤหัสบดี</th>
+                        <th data-day="5">ศุกร์</th>
+                    </tr>
+                </thead>
+                <tbody id="schedule-body">
+                    <tr data-time="9"><td>09:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr data-time="10"><td>10:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr data-time="11"><td>11:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr data-time="12"><td>12:00</td><td colspan="5" class="lunch-break">พักกลางวัน</td></tr>
+                    <tr data-time="13"><td>13:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr data-time="14"><td>14:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr data-time="15"><td>15:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr data-time="16"><td>16:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr data-time="17"><td>17:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr data-time="18"><td>18:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                    <tr class="time-end-row"><td style="visibility: hidden;">19:00</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Modal สำหรับเพิ่ม/แก้ไขรายวิชา -->
+    <div id="add-class-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">×</span>
+            <h2>เพิ่ม/แก้ไขรายวิชา</h2>
+            <form id="add-class-form">
+                <!-- Hidden input เพื่อเก็บ ID ของบล็อกที่กำลังแก้ไข -->
+                <input type="hidden" id="editing-block-id">
+
+                <label for="subject-name">ชื่อวิชา:</label>
+                <input type="text" id="subject-name" required>
+
+                <label for="day">วัน:</label>
+                <select id="day" required>
+                    <option value="1">จันทร์</option>
+                    <option value="2">อังคาร</option>
+                    <option value="3">พุธ</option>
+                    <option value="4">พฤหัสบดี</option>
+                    <option value="5">ศุกร์</option>
+                </select>
+
+                <label for="start-time">เวลาเริ่ม:</label>
+                <input type="time" id="start-time" step="900" required> <!-- step="900" คือ 15 นาที -->
+
+                <label for="end-time">เวลาสิ้นสุด:</label>
+                <input type="time" id="end-time" step="900" required>
+
+                <label for="location">ห้องเรียน/หมายเหตุ:</label>
+                <input type="text" id="location">
+
+                <label for="subject-color">สีของวิชา:</label>
+                <select id="subject-color">
+                    <option value="subject-type1">สีฟ้า</option>
+                    <option value="subject-type2">สีเขียว</option>
+                    <option value="subject-type3">สีเหลือง</option>
+                    <option value="subject-type4">สีแดง</option>
+                    <option value="subject-type5">สีม่วง</option>
+                </select>
+
+                <div class="form-buttons">
+                    <button type="submit" class="button-primary">บันทึก</button>
+                    <button type="button" id="delete-btn" class="button-danger">ลบ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- *** เพิ่มการเรียกใช้ Interact.js *** -->
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    
+    <!-- เชื่อมต่อกับไฟล์ JavaScript ของเรา -->
+    <script src="scripts/main.js"></script>
+</body>
+</html>

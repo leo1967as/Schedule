@@ -1,0 +1,198 @@
+/* --- การตั้งค่าทั่วไป --- */
+body {
+    font-family: 'Sarabun', sans-serif;
+    background-color: #f7f9fc;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+h1 {
+    color: #0056b3;
+}
+
+/* --- ปุ่ม --- */
+.button-primary {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-family: 'Sarabun', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.button-primary:hover {
+    background-color: #0056b3;
+}
+
+/* --- สไตล์ตาราง --- */
+.schedule-table {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    border-collapse: collapse;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    table-layout: fixed; /* ทำให้คอลัมน์กว้างเท่ากัน */
+}
+.schedule-table th, .schedule-table td {
+    border: 1px solid #dee2e6;
+    text-align: center;
+    vertical-align: top;
+    height: 60px;
+    position: relative; /* สำคัญมากสำหรับ JS */
+    padding: 0;
+}
+.schedule-table th:first-child, .schedule-table td:first-child {
+    width: 80px; /* กำหนดความกว้างให้คอลัมน์เวลา */
+    font-weight: bold;
+    background-color: #f8f9fa;
+    padding-top: 5px;
+}
+.schedule-table thead {
+    background-color: #007bff;
+    color: white;
+    font-weight: 700;
+}
+.time-end-row td {
+    height: 0; border: 0; border-top: 1px solid #dee2e6;
+}
+
+/* --- บล็อกวิชา --- */
+.class-block {
+    position: absolute;
+    width: calc(100% - 8px);
+    left: 4px;
+    padding: 8px;
+    border-radius: 8px;
+    box-sizing: border-box;
+    overflow: hidden;
+    color: #212529;
+    font-size: 0.9em;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+.class-block:hover {
+    opacity: 0.8;
+    cursor: pointer;
+}
+.class-block strong {
+    font-weight: 700; display: block;
+}
+.class-block span {
+    font-size: 0.85em; opacity: 0.9;
+}
+/* สีของวิชา */
+.subject-type1 { background-color: #d1ecf1; border-left: 5px solid #0c5460; }
+.subject-type2 { background-color: #d4edda; border-left: 5px solid #155724; }
+.subject-type3 { background-color: #fff3cd; border-left: 5px solid #856404; }
+.subject-type4 { background-color: #f8d7da; border-left: 5px solid #721c24; }
+.subject-type5 { background-color: #e2d9f3; border-left: 5px solid #492394; }
+.lunch-break { background-color: #f0f0f0; font-weight: bold; color: #555; padding-top: 18px;}
+
+
+/* --- Modal (หน้าต่างป๊อปอัป) --- */
+.modal {
+    display: none; /* ซ่อนไว้เป็นค่าเริ่มต้น */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+.modal.show {
+    display: flex; /* แสดง Modal เมื่อมี class 'show' */
+}
+.modal-content {
+    background-color: #fefefe;
+    padding: 20px 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+}
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+#add-class-form label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+#add-class-form input, #add-class-form select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+#add-class-form button {
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* เพิ่มเติมจากของเดิม */
+
+/* สไตล์ของปุ่ม */
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+.form-buttons button {
+    width: 48%;
+}
+.button-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-family: 'Sarabun', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.button-danger:hover {
+    background-color: #c82333;
+}
+#delete-btn {
+    display: none; /* ซ่อนปุ่มลบไว้ก่อน */
+}
+#delete-btn.visible {
+    display: inline-block; /* แสดงเมื่ออยู่ในโหมดแก้ไข */
+}
+
+/* สไตล์ของบล็อกวิชา */
+.class-block {
+    /* ...โค้ดเดิม... */
+    z-index: 10;
+    touch-action: none; /* สำหรับ Interact.js บน mobile */
+}
+
+/* สไตล์ขณะที่ลากบล็อก */
+.class-block.dragging {
+    opacity: 0.7;
+    z-index: 20;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* ...โค้ดอื่นๆ เหมือนเดิม... */

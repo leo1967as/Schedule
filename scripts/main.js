@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentClassContainer.classList.remove('hidden');
             const diff = currentClass.endTime - now;
             const { hours, minutes, seconds } = formatTime(diff);
-            currentClassTitle.innerHTML = `<div class="countdown-subject-info"><strong>${currentClass.name}</strong><span><br>${currentClass.startTime.toTimeString().substring(0, 5)} - ${currentClass.endTime.toTimeString().substring(0, 5)}</span><span><br> > ${currentClass.location || ''}</span></div><small>จะสิ้นสุดใน</small>`;
+            currentClassTitle.innerHTML = `<div class="countdown-subject-info"><strong>${currentClass.name}</strong><span><br>${currentClass.startTime.toTimeString().substring(0, 5)} - ${currentClass.endTime.toTimeString().substring(0, 5)}</span><span><br><strong><u> > ${currentClass.location || ''}</u></span></div><small>จะสิ้นสุดใน</small>`;
             currentClassTimer.textContent = `${hours}:${minutes}:${seconds}`;
         } else {
             currentClassContainer.classList.add('hidden');
@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             nextClassContainer.classList.remove('hidden');
             const diff = nextClass.startTime - now;
             const { hours, minutes, seconds } = formatTime(diff);
-            nextClassTitle.innerHTML = `<div class="countdown-subject-info"><strong>${nextClass.name}</strong><span><br>${nextClass.startTime.toTimeString().substring(0, 5)} - ${nextClass.endTime.toTimeString().substring(0, 5)}</span><span><br> > ${nextClass.location || ''}</span></div><small>จะเริ่มใน</small>`;
+            nextClassTitle.innerHTML = `<div class="countdown-subject-info"><strong>${nextClass.name}</strong><span><br>${nextClass.startTime.toTimeString().substring(0, 5)} - ${nextClass.endTime.toTimeString().substring(0, 5)}</span><span><br><strong><u> > ${nextClass.location || ''}</u></span></div><small>จะเริ่มใน</small>`;
             nextClassTimer.textContent = `${hours}:${minutes}:${seconds}`;
         } else {
             nextClassContainer.classList.add('hidden');

@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const block = document.createElement('div');
         block.id = data.id;
         block.className = `class-block ${data.colorClass}`;
-        block.innerHTML = `<strong>${data.name}</strong><span>${data.startTime} - ${data.endTime}</span><span>${data.location}</span>`;
+        block.innerHTML = `<strong><h4>${data.name}</strong><span>${data.startTime} - ${data.endTime}</span><span>${data.location}</span>`;
         Object.assign(block.dataset, data);
         const cellHeight = 60;
         const topPosition = (startMinute / 60) * cellHeight;

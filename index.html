@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ตารางเรียน (Drag & Drop)</title>
+    <title>My Schedule App</title>
     <link rel="stylesheet" href="styles/main.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,69 +11,97 @@
 </head>
 <body>
 
-    <header>
-        <h1>ตารางเรียน ภาคเรียนที่ 1/2568</h1>
-                <div id="countdown-container" class="countdown-container">
-            <h2 id="countdown-title">กำลังโหลด...</h2>
-                    <div class="info-panel">
-            <!-- 1. บล็อกสำหรับวิชาที่กำลังเรียน (ซ่อนไว้ตอนแรก) -->
-            <div id="current-class-container" class="info-block current hidden">
-                <h2 id="current-class-title">--</h2>
-                <p id="current-class-timer" class="timer-display">--:--:--</p>
+    <!-- 1. หน้าจอสำหรับ Login (แสดงเป็นค่าเริ่มต้น) -->
+    <div id="login-screen" class="login-container">
+        <div class="login-box">
+            <h2>My Schedule App</h2>
+            <p>กรุณากรอกชื่อผู้ใช้ (ID) เพื่อโหลดหรือสร้างตารางเรียนของคุณ</p>
+            <form id="login-form">
+                <input type="text" id="user-id-input" placeholder="เช่น Leo, Jane, etc." required>
+                <button type="submit" class="button-primary">Load Schedule</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. คอนเทนเนอร์หลักของแอป (ซ่อนไว้ตอนแรก) -->
+    <div id="app-container" style="display: none;">
+        
+        <!-- แถบสำหรับโหมดอ่านอย่างเดียว (ซ่อนไว้ตอนแรก) -->
+        <div id="viewer-mode-banner" class="viewer-banner hidden">
+            <p>คุณกำลังดูตารางเรียนของ <strong id="viewing-user-name"></strong> (โหมดอ่านอย่างเดียว)</p>
+            <button id="exit-viewer-mode-btn" class="button-secondary">กลับไปที่ตารางของฉัน</button>
+        </div>
+
+        <header>
+            <h1>ตารางเรียน ภาคเรียนที่ 1/2568</h1>
+            
+            <!-- ส่วนแสดงชื่อผู้ใช้และปุ่มควบคุม -->
+            <div class="user-session-info">
+                <span>สำหรับ: <strong id="current-user-display"></strong></span>
+                <button id="share-btn" class="button-secondary share">แชร์</button>
+                <button id="logout-btn" class="button-secondary">Switch User</button>
             </div>
-
-            <!-- 2. บล็อกสำหรับวิชาถัดไป (ซ่อนไว้ตอนแรก) -->
-            <div id="next-class-container" class="info-block next hidden">
-                <h2 id="next-class-title">--</h2>
-                <p id="next-class-timer" class="timer-display">--:--:--</p>
+                        <!-- แผงข้อมูลที่จะบรรจุ Countdown ทั้งสอง -->
+            <div class="info-panel">
+                <!-- บล็อกสำหรับวิชาที่กำลังเรียน (ซ่อนไว้ตอนแรก) -->
+                <div id="current-class-container" class="info-block current hidden">
+                    <h2 id="current-class-title">--</h2>
+                    <p id="current-class-timer" class="timer-display">--:--:--</p>
+                </div>
+                <!-- บล็อกสำหรับวิชาถัดไป (ซ่อนไว้ตอนแรก) -->
+                <div id="next-class-container" class="info-block next hidden">
+                    <h2 id="next-class-title">--</h2>
+                    <p id="next-class-timer" class="timer-display">--:--:--</p>
+                </div>
             </div>
-        </div>
-        </div>
+        </header>
 
-    </header>
+        <main>
+            <div class="table-container">
+                <table class="schedule-table" id="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>เวลา</th>
+                            <th data-day="1">จันทร์</th>
+                            <th data-day="2">อังคาร</th>
+                            <th data-day="3">พุธ</th>
+                            <th data-day="4">พฤหัสบดี</th>
+                            <th data-day="5">ศุกร์</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-body">
+                        <tr data-time="9"><td>09:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr data-time="10"><td>10:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr data-time="11"><td>11:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr data-time="12"><td>12:00</td><td colspan="5" class="lunch-break">พักกลางวัน</td></tr>
+                        <tr data-time="13"><td>13:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr data-time="14"><td>14:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr data-time="15"><td>15:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr data-time="16"><td>16:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr data-time="17"><td>17:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr data-time="18"><td>18:00</td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr class="time-end-row"><td style="visibility: hidden;">19:00</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
 
-    <main>
-        <div class="table-container">
-            <table class="schedule-table" id="schedule-table">
-                <thead>
-                    <tr>
-                        <th>เวลา</th>
-                        <th data-day="1">จันทร์</th>
-                        <th data-day="2">อังคาร</th>
-                        <th data-day="3">พุธ</th>
-                        <th data-day="4">พฤหัสบดี</th>
-                        <th data-day="5">ศุกร์</th>
-                    </tr>
-                </thead>
-                <tbody id="schedule-body">
-                    <tr data-time="9"><td>09:00</td><td></td><td></td><td></td><td></td><td></td></tr>
-                    <tr data-time="10"><td>10:00</td><td></td><td></td><td></td><td></td><td></td></tr>
-                    <tr data-time="11"><td>11:00</td><td></td><td></td><td></td><td></td><td></td></tr>
-                    <tr data-time="12"><td>12:00</td><td colspan="5" class="lunch-break">พักกลางวัน</td></tr>
-                    <tr data-time="13"><td>13:00</td><td></td><td></td><td></td><td></td><td></td></tr>
-                    <tr data-time="14"><td>14:00</td><td></td><td></td><td></td><td></td><td></td></tr>
-                    <tr data-time="15"><td>15:00</td><td></td><td></td><td></td><td></td><td></td></tr>
-                    <tr data-time="16"><td>16:00</td><td></td><td></td><td></td><td></td><td></td></tr>
-                    <tr data-time="17"><td>17:00</td><td></td><td></td><td></td><td></td><td></td></tr>
-                    <tr data-time="18"><td>18:00</td><td></td><td></td><td></td><td></td><td></td></tr>
-                    <tr class="time-end-row"><td style="visibility: hidden;">19:00</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </main>
+        <footer class="page-controls">
 
-    <!-- Modal สำหรับเพิ่ม/แก้ไขรายวิชา -->
+            <!-- ปุ่มเพิ่มรายวิชา -->
+            <button id="add-class-btn" class="button-primary">เพิ่มรายวิชา +</button>
+        </footer>
+    </div>
+
+    <!-- 3. Modal สำหรับเพิ่ม/แก้ไขรายวิชา -->
     <div id="add-class-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn">×</span>
             <h2>เพิ่ม/แก้ไขรายวิชา</h2>
             <form id="add-class-form">
-                <!-- Hidden input เพื่อเก็บ ID ของบล็อกที่กำลังแก้ไข -->
                 <input type="hidden" id="editing-block-id">
-
                 <label for="subject-name">ชื่อวิชา:</label>
                 <input type="text" id="subject-name" required>
-
                 <label for="day">วัน:</label>
                 <select id="day" required>
                     <option value="1">จันทร์</option>
@@ -82,16 +110,12 @@
                     <option value="4">พฤหัสบดี</option>
                     <option value="5">ศุกร์</option>
                 </select>
-
                 <label for="start-time">เวลาเริ่ม:</label>
-                <input type="time" id="start-time" step="900" required> <!-- step="900" คือ 15 นาที -->
-
+                <input type="time" id="start-time" step="900" required>
                 <label for="end-time">เวลาสิ้นสุด:</label>
                 <input type="time" id="end-time" step="900" required>
-
                 <label for="location">ห้องเรียน/หมายเหตุ:</label>
                 <input type="text" id="location">
-
                 <label for="subject-color">สีของวิชา:</label>
                 <select id="subject-color">
                     <option value="subject-type1">สีฟ้า</option>
@@ -100,7 +124,6 @@
                     <option value="subject-type4">สีแดง</option>
                     <option value="subject-type5">สีม่วง</option>
                 </select>
-
                 <div class="form-buttons">
                     <button type="submit" class="button-primary">บันทึก</button>
                     <button type="button" id="delete-btn" class="button-danger">ลบ</button>
@@ -109,17 +132,18 @@
         </div>
     </div>
 
-        <!-- ****** ส่วนใหม่: ส่วนควบคุมและ Countdown Timer ****** -->
-    <footer class="page-controls">
-        <!-- 1. บล็อกสำหรับ Countdown -->
+    <!-- 4. Modal สำหรับแสดงลิงก์แชร์ -->
+    <div id="share-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">×</span>
+            <h2>แชร์ตารางเรียนของคุณ</h2>
+            <p>คัดลอกลิงก์ด้านล่างแล้วส่งให้เพื่อนเพื่อดูตารางเรียนของคุณ (เพื่อนจะแก้ไขไม่ได้)</p>
+            <input type="text" id="share-url-input" readonly>
+            <button id="copy-url-btn" class="button-primary">คัดลอกลิงก์</button>
+        </div>
+    </div>
 
-        <!-- 2. ปุ่มเพิ่มรายวิชาที่ย้ายมา -->
-        <button id="add-class-btn" class="button-primary">เพิ่มรายวิชา +</button>
-    </footer>
-    <!-- *** เพิ่มการเรียกใช้ Interact.js *** -->
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    
-    <!-- เชื่อมต่อกับไฟล์ JavaScript ของเรา -->
     <script src="scripts/main.js"></script>
 </body>
 </html>

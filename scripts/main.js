@@ -1,25 +1,90 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- 1. ส่วนของ DOM Elements ---
+    const loginScreen = document.getElementById('login-screen');
+    const appContainer = document.getElementById('app-container');
+    const loginForm = document.getElementById('login-form');
+    const userIdInput = document.getElementById('user-id-input');
+    const currentUserDisplay = document.getElementById('current-user-display');
+    const logoutBtn = document.getElementById('logout-btn');
+    
     const modal = document.getElementById('add-class-modal');
     const addClassBtn = document.getElementById('add-class-btn');
-    const closeBtn = document.querySelector('.close-btn');
+    const closeBtn = modal.querySelector('.close-btn');
     const form = document.getElementById('add-class-form');
     const deleteBtn = document.getElementById('delete-btn');
+    
     const tableContainer = document.querySelector('.table-container');
     const scheduleBody = document.getElementById('schedule-body');
     
-    // Element สำหรับ Countdown ทั้งสองบล็อก
     const currentClassContainer = document.getElementById('current-class-container');
     const currentClassTitle = document.getElementById('current-class-title');
     const currentClassTimer = document.getElementById('current-class-timer');
     const nextClassContainer = document.getElementById('next-class-container');
     const nextClassTitle = document.getElementById('next-class-title');
     const nextClassTimer = document.getElementById('next-class-timer');
-    
-    let blockIdCounter = 0;
-    let ghostBlock = null; // ตัวแปรสำหรับเก็บ "บล็อกเงา" ขณะลาก
 
-    // --- 2. ฟังก์ชันจัดการ Modal (หน้าต่างป๊อปอัป) ---
+    const shareBtn = document.getElementById('share-btn');
+    const shareModal = document.getElementById('share-modal');
+    const shareUrlInput = document.getElementById('share-url-input');
+    const copyUrlBtn = document.getElementById('copy-url-btn');
+    
+    const viewerBanner = document.getElementById('viewer-mode-banner');
+    const viewingUserName = document.getElementById('viewing-user-name');
+    const exitViewerModeBtn = document.getElementById('exit-viewer-mode-btn');
+
+    // --- 2. State Variables ---
+    let currentUser = null;
+    let blockIdCounter = 0;
+    let ghostBlock = null;
+
+    // --- 3. ฟังก์ชันจัดการข้อมูล (CRUD + LocalStorage) ---
+    function saveScheduleToLocalStorage() {
+        if (!currentUser) return;
+        const dataKey = `scheduleApp_${currentUser}`;
+        const allBlocks = document.querySelectorAll('.class-block');
+        const scheduleData = Array.from(allBlocks).map(block => ({ ...block.dataset }));
+        localStorage.setItem(dataKey, JSON.stringify(scheduleData));
+    }
+
+    function loadScheduleFromLocalStorage(userId) {
+        scheduleBody.querySelectorAll('.class-block').forEach(block => block.remove()); // เคลียร์บอร์ดก่อน
+        const dataKey = `scheduleApp_${userId}`;
+        const savedData = localStorage.getItem(dataKey);
+        if (savedData) {
+            const scheduleData = JSON.parse(savedData);
+            let maxId = 0;
+            scheduleData.forEach(data => {
+                createClassBlock(data);
+                const idNum = parseInt(data.id.split('-').pop());
+                if (idNum > maxId) maxId = idNum;
+            });
+            blockIdCounter = maxId;
+        }
+    }
+
+    function createClassBlock(data) {
+        const [startHour, startMinute] = data.startTime.split(':').map(Number);
+        const [endHour, endMinute] = data.endTime.split(':').map(Number);
+        const durationMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+        if (durationMinutes <= 0) return;
+        const targetRow = scheduleBody.querySelector(`tr[data-time="${startHour}"]`);
+        if (!targetRow) return;
+        const targetCell = targetRow.cells[parseInt(data.day)];
+        if (!targetCell) return;
+        const block = document.createElement('div');
+        block.id = data.id;
+        block.className = `class-block ${data.colorClass}`;
+        block.innerHTML = `<strong>${data.name}</strong><span>${data.startTime} - ${data.endTime}</span><span>${data.location}</span>`;
+        Object.assign(block.dataset, data);
+        const cellHeight = 60;
+        const topPosition = (startMinute / 60) * cellHeight;
+        const blockHeight = (durationMinutes / 60) * cellHeight;
+        block.style.top = `${topPosition}px`;
+        block.style.height = `${blockHeight - 4}px`;
+        targetCell.appendChild(block);
+    }
+
+    // --- 4. ฟังก์ชันจัดการ UI และ Event Listeners ---
     const openModal = () => modal.classList.add('show');
     const closeModal = () => {
         modal.classList.remove('show');
@@ -34,24 +99,17 @@ document.addEventListener('DOMContentLoaded', () => {
         openModal();
     });
     closeBtn.addEventListener('click', closeModal);
-    window.addEventListener('click', (e) => (e.target === modal) && closeModal());
-
-    // --- 3. ฟังก์ชันหลักในการสร้าง, แก้ไข, และลบรายวิชา ---
-    function saveClass(event) {
+    
+    form.addEventListener('submit', (event) => {
         event.preventDefault();
-
-        // 3.1 ตรวจสอบความถูกต้องของเวลา (Validation)
         const startTimeStr = document.getElementById('start-time').value;
         const endTimeStr = document.getElementById('end-time').value;
         const startTime = new Date(`1970-01-01T${startTimeStr}`);
         const endTime = new Date(`1970-01-01T${endTimeStr}`);
-
         if (endTime <= startTime) {
             alert('เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มต้นเสมอ!');
-            return; // หยุดการทำงาน
+            return;
         }
-
-        // 3.2 รวบรวมข้อมูลจากฟอร์ม
         const editingBlockId = document.getElementById('editing-block-id').value;
         const classData = {
             id: editingBlockId || `class-block-${++blockIdCounter}`,
@@ -62,60 +120,23 @@ document.addEventListener('DOMContentLoaded', () => {
             location: document.getElementById('location').value,
             colorClass: document.getElementById('subject-color').value,
         };
-
-        // 3.3 ถ้าเป็นการแก้ไข ให้ลบบล็อกเก่าทิ้งก่อน
-        if (editingBlockId) {
-            document.getElementById(editingBlockId)?.remove();
-        }
-        
-        // 3.4 สร้างบล็อกใหม่, ปิด Modal, และอัปเดต Countdown
+        if (editingBlockId) document.getElementById(editingBlockId)?.remove();
         createClassBlock(classData);
         closeModal();
+        saveScheduleToLocalStorage();
         updateCountdown();
-    }
-    
-    function createClassBlock(data) {
-        const [startHour, startMinute] = data.startTime.split(':').map(Number);
-        const [endHour, endMinute] = data.endTime.split(':').map(Number);
-        const durationMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
-
-        if (durationMinutes <= 0) return;
-
-        const targetRow = scheduleBody.querySelector(`tr[data-time="${startHour}"]`);
-        if (!targetRow) return;
-        const targetCell = targetRow.cells[parseInt(data.day)];
-        if (!targetCell) return;
-
-        const block = document.createElement('div');
-        block.id = data.id;
-        block.className = `class-block ${data.colorClass}`;
-        block.innerHTML = `<strong>${data.name}</strong><span>${data.startTime} - ${data.endTime}</span><span>${data.location}</span>`;
-        
-        // เก็บข้อมูลทั้งหมดไว้ใน dataset เพื่อให้เรียกใช้ได้ง่าย
-        Object.assign(block.dataset, data);
-        
-        const cellHeight = 60; // กำหนดค่าความสูงของแถวเป็นค่าคงที่เพื่อความแม่นยำ
-        const topPosition = (startMinute / 60) * cellHeight;
-        const blockHeight = (durationMinutes / 60) * cellHeight;
-        
-        block.style.top = `${topPosition}px`;
-        block.style.height = `${blockHeight - 4}px`; // -4px เพื่อความสวยงาม
-        
-        targetCell.appendChild(block);
-    }
-    
-    form.addEventListener('submit', saveClass);
+    });
 
     deleteBtn.addEventListener('click', () => {
         const editingBlockId = document.getElementById('editing-block-id').value;
         if (editingBlockId && confirm('คุณต้องการลบรายวิชานี้ใช่หรือไม่?')) {
             document.getElementById(editingBlockId)?.remove();
             closeModal();
+            saveScheduleToLocalStorage();
             updateCountdown();
         }
     });
 
-    // Event Listener สำหรับการคลิกเพื่อแก้ไข
     tableContainer.addEventListener('click', (e) => {
         const block = e.target.closest('.class-block');
         if (block) {
@@ -132,11 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 4. ระบบ Countdown Timer แบบแยกส่วน ---
+    // --- 5. ระบบ Countdown Timer ---
     function updateCountdown() {
         const now = new Date();
-        const todayDay = now.getDay() === 0 ? 7 : now.getDay(); // จันทร์=1, อาทิตย์=7
-
+        const todayDay = now.getDay() === 0 ? 7 : now.getDay();
         const allClassesToday = Array.from(document.querySelectorAll('.class-block'))
             .map(block => {
                 const [startH, startM] = block.dataset.startTime.split(':');
@@ -150,20 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .filter(cls => cls.day === todayDay)
             .sort((a, b) => a.startTime - b.startTime);
-
-        let currentClass = null;
-        let nextClass = null;
-
-        for (const cls of allClassesToday) {
-            if (now >= cls.startTime && now < cls.endTime) {
-                currentClass = cls;
-            }
-            if (now < cls.startTime && !nextClass) {
-                nextClass = cls;
-            }
-        }
-
-        // อัปเดตบล็อก "กำลังเรียน"
+        let currentClass = allClassesToday.find(cls => now >= cls.startTime && now < cls.endTime);
+        let nextClass = allClassesToday.find(cls => now < cls.startTime);
         if (currentClass) {
             currentClassContainer.classList.remove('hidden');
             const diff = currentClass.endTime - now;
@@ -173,8 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             currentClassContainer.classList.add('hidden');
         }
-
-        // อัปเดตบล็อก "วิชาถัดไป"
         if (nextClass) {
             nextClassContainer.classList.remove('hidden');
             const diff = nextClass.startTime - now;
@@ -195,12 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return { hours, minutes, seconds };
     }
     
-    setInterval(updateCountdown, 1000);
-    updateCountdown();
-
-    // --- 5. ระบบ Drag & Drop ด้วย Interact.js ---
-    interact('.class-block')
-        .draggable({
+    // --- 6. ระบบ Drag & Drop ด้วย Interact.js ---
+    function initializeDragAndDrop() {
+        interact('.class-block').draggable({
             listeners: {
                 start(event) {
                     const block = event.target;
@@ -252,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         };
                         block.remove();
                         createClassBlock(newClassData);
+                        saveScheduleToLocalStorage();
                         updateCountdown();
                     }
                     if (ghostBlock) {
@@ -262,4 +266,87 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             inertia: false
         });
+    }
+
+    // --- 7. ระบบแชร์ (Share System) ---
+    shareBtn.addEventListener('click', () => {
+        const dataKey = `scheduleApp_${currentUser}`;
+        const scheduleData = localStorage.getItem(dataKey) || '[]';
+        const encodedData = btoa(unescape(encodeURIComponent(scheduleData))); // Handle UTF-8 characters
+        const shareUrl = `${window.location.origin}${window.location.pathname}?view=${encodedData}&user=${encodeURIComponent(currentUser)}`;
+        shareUrlInput.value = shareUrl;
+        shareModal.querySelector('.close-btn').onclick = () => shareModal.classList.remove('show');
+        shareModal.classList.add('show');
+    });
+
+    copyUrlBtn.addEventListener('click', () => {
+        shareUrlInput.select();
+        document.execCommand('copy');
+        copyUrlBtn.textContent = 'คัดลอกแล้ว!';
+        setTimeout(() => { copyUrlBtn.textContent = 'คัดลอกลิงก์'; }, 2000);
+    });
+
+    exitViewerModeBtn.addEventListener('click', () => {
+        window.location.href = `${window.location.origin}${window.location.pathname}`;
+    });
+
+    // --- 8. หัวใจหลัก: ระบบจัดการ User Session และการเริ่มต้นแอป ---
+    function init() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewData = urlParams.get('view');
+        const viewingUser = urlParams.get('user');
+
+        if (viewData) {
+            // เข้าสู่โหมดอ่านอย่างเดียว (Viewer Mode)
+            appContainer.classList.add('read-only');
+            loginScreen.style.display = 'none';
+            appContainer.style.display = 'block';
+            viewerBanner.classList.remove('hidden');
+            viewingUserName.textContent = decodeURIComponent(viewingUser) || 'ไม่ระบุชื่อ';
+            try {
+                const decodedData = decodeURIComponent(escape(atob(viewData)));
+                const scheduleData = JSON.parse(decodedData);
+                scheduleData.forEach(data => createClassBlock(data));
+            } catch (e) {
+                console.error("Error parsing shared data:", e);
+                alert("ไม่สามารถโหลดข้อมูลที่แชร์มาได้ อาจเป็นเพราะลิงก์ไม่ถูกต้อง");
+            }
+            setInterval(updateCountdown, 1000);
+            updateCountdown();
+        } else {
+            // เข้าสู่โหมดผู้ใช้ปกติ (User Mode)
+            currentUser = localStorage.getItem('currentScheduleAppUser');
+            if (currentUser) {
+                loginScreen.style.display = 'none';
+                appContainer.style.display = 'block';
+                currentUserDisplay.textContent = currentUser;
+                loadScheduleFromLocalStorage(currentUser);
+                setInterval(updateCountdown, 1000);
+                updateCountdown();
+                initializeDragAndDrop();
+            } else {
+                loginScreen.style.display = 'flex';
+                appContainer.style.display = 'none';
+            }
+        }
+    }
+
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const userId = userIdInput.value.trim();
+        if (userId) {
+            localStorage.setItem('currentScheduleAppUser', userId);
+            location.reload();
+        }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        if (confirm('คุณต้องการออกจากระบบและกลับไปหน้าเลือกผู้ใช้?')) {
+            localStorage.removeItem('currentScheduleAppUser');
+            location.reload();
+        }
+    });
+
+    // เริ่มการทำงานของแอปพลิเคชัน
+    init();
 });

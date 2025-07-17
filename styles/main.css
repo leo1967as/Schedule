@@ -6,6 +6,10 @@ body {
     background-color: #f7f9fc;
     color: #333;
     margin: 0;
+    padding: 0; /* Body ไม่ต้องมี padding */
+}
+
+#app-container {
     padding: 0 20px 20px 20px;
 }
 
@@ -258,7 +262,7 @@ h1 {
     align-items: flex-end;
     gap: 20px;
     margin-top: 30px;
-    padding: 0 5px; /* ลด padding ด้านข้างเล็กน้อย */
+    padding: 0 5px;
     flex-wrap: wrap;
 }
 
@@ -270,7 +274,7 @@ h1 {
 }
 
 .info-block {
-    flex-basis: 250px; /* กำหนดความกว้างพื้นฐาน */
+    flex-basis: 250px;
     flex-grow: 1;
     background-color: #fff;
     border-radius: 12px;
@@ -304,16 +308,146 @@ h1 {
     letter-spacing: 1.5px;
 }
 
-/* สีเฉพาะสำหรับแต่ละบล็อก Countdown */
 .info-block.current .timer-display {
-    color: #dc3545; /* สีแดง: กำลังจะหมดเวลา */
+    color: #dc3545;
 }
 .info-block.next .timer-display {
-    color: #28a745; /* สีเขียว: กำลังจะเริ่ม */
+    color: #28a745;
 }
 
-/* ปุ่มเพิ่มวิชาที่อยู่ท้ายหน้า */
 #add-class-btn {
-    flex-shrink: 0; /* ไม่ให้ปุ่มหดตัว */
-    margin-bottom: 5px; /* จัดตำแหน่งให้สวยงาม */
+    flex-shrink: 0;
+    margin-bottom: 5px;
+}
+
+/* ==========================================================================
+   6. สไตล์สำหรับหน้า Login, Session และโหมดแชร์
+   ========================================================================== */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    background-color: #e9ecef;
+}
+
+.login-box {
+    background: white;
+    padding: 40px 50px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    text-align: center;
+    width: 90%;
+    max-width: 450px;
+}
+
+.login-box h2 {
+    margin-top: 0;
+    color: #0056b3;
+}
+
+.login-box p {
+    color: #6c757d;
+    margin-bottom: 25px;
+}
+
+#login-form input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+#login-form button {
+    width: 100%;
+}
+
+/* ส่วนแสดงข้อมูลผู้ใช้ที่ล็อกอิน */
+.user-session-info {
+    margin-top: 15px;
+    padding: 8px 12px;
+    background-color: #e9ecef;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.user-session-info span {
+    font-weight: 500;
+}
+
+.button-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.button-secondary:hover {
+    background-color: #5a6268;
+}
+
+.button-secondary.share {
+    background-color: #17a2b8;
+}
+.button-secondary.share:hover {
+    background-color: #138496;
+}
+
+/* แถบแสดงสถานะโหมดดูอย่างเดียว */
+.viewer-banner {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    padding: 10px 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+.viewer-banner.hidden {
+    display: none;
+}
+.viewer-banner p {
+    margin: 0;
+}
+
+/* Modal สำหรับแชร์ */
+#share-url-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin: 15px 0;
+    font-size: 0.9rem;
+    background-color: #e9ecef;
+    cursor: text;
+}
+#copy-url-btn {
+    width: 100%;
+}
+
+/* คลาสควบคุมโหมดอ่านอย่างเดียว */
+.read-only .user-session-info,
+.read-only #add-class-btn {
+    display: none;
+}
+
+.read-only .class-block {
+    cursor: default;
+    pointer-events: none;
 }

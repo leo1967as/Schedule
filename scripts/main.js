@@ -183,11 +183,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 4. ระบบ Countdown Timer ---
+    // --- 6. ระบบ Countdown Timer ---
     function updateCountdown() {
         const now = new Date();
-        const todayDay = now.getDay() === 0 ? 7 : now.getDay(); // จันทร์=1, อาทิตย์=7
-
+        const todayDay = now.getDay() === 0 ? 7 : now.getDay();
         const allClassesToday = Array.from(document.querySelectorAll('.class-block'))
             .map(block => {
                 const [startH, startM] = block.dataset.startTime.split(':');
@@ -201,26 +200,25 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .filter(cls => cls.day === todayDay)
             .sort((a, b) => a.startTime - b.startTime);
-
         let currentClass = allClassesToday.find(cls => now >= cls.startTime && now < cls.endTime);
         let nextClass = allClassesToday.find(cls => now < cls.startTime);
-
         if (currentClass) {
-            countdownContainer.classList.remove('idle');
+            currentClassContainer.classList.remove('hidden');
             const diff = currentClass.endTime - now;
             const { hours, minutes, seconds } = formatTime(diff);
-            countdownTitle.textContent = `วิชา "${currentClass.name}" จะสิ้นสุดใน`;
-            countdownTimer.textContent = `${hours}:${minutes}:${seconds}`;
-        } else if (nextClass) {
-            countdownContainer.classList.remove('idle');
+            currentClassTitle.textContent = `"${currentClass.name}" สิ้นสุดใน`;
+            currentClassTimer.textContent = `${hours}:${minutes}:${seconds}`;
+        } else {
+            currentClassContainer.classList.add('hidden');
+        }
+        if (nextClass) {
+            nextClassContainer.classList.remove('hidden');
             const diff = nextClass.startTime - now;
             const { hours, minutes, seconds } = formatTime(diff);
-            countdownTitle.textContent = `วิชาถัดไป "${nextClass.name}" จะเริ่มใน`;
-            countdownTimer.textContent = `${hours}:${minutes}:${seconds}`;
+            nextClassTitle.textContent = `"${nextClass.name}" เริ่มใน`;
+            nextClassTimer.textContent = `${hours}:${minutes}:${seconds}`;
         } else {
-            countdownContainer.classList.add('idle');
-            countdownTitle.textContent = 'สิ้นสุดชั้นเรียนสำหรับวันนี้';
-            countdownTimer.textContent = 'พักผ่อนได้!';
+            nextClassContainer.classList.add('hidden');
         }
     }
 
@@ -268,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ghostBlock.dataset.isValidTarget = "false";
                     }
                 },
-                end(event) {
+                end: async (event) => {
                     const block = event.target;
                     block.classList.remove('dragging');
                     if (ghostBlock && ghostBlock.dataset.isValidTarget === "true") {
@@ -287,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         };
                         block.remove();
                         createClassBlock(newClassData);
-                        saveScheduleToLocalStorage();
+                        await saveScheduleToFirestore();
                         updateCountdown();
                     }
                     if (ghostBlock) {
@@ -382,6 +380,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ** เริ่มการทำงานของแอปพลิเคชัน **
     init();
-    
-    // *** หมายเหตุ: คัดลอกโค้ดส่วนที่ไม่ได้แสดงในที่นี้จากไฟล์ล่าสุดมาทั้งหมด ***
 });

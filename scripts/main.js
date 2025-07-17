@@ -104,9 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const block = document.createElement('div');
         block.id = data.id;
         block.className = `class-block ${data.colorClass}`;
-        block.innerHTML = `<strong><h4>${data.name}</strong><span>${data.startTime} - ${data.endTime}</span><span>${data.location}</span>`;
+        block.innerHTML = `<strong><h4>${data.name}</strong><span>${data.startTime} - ${data.endTime}</span><br><span>${data.location}</span>`;
         Object.assign(block.dataset, data);
-        const cellHeight = 60;
+        const cellHeight = 67;
         const topPosition = (startMinute / 60) * cellHeight;
         const blockHeight = (durationMinutes / 60) * cellHeight;
         block.style.top = `${topPosition}px`;
@@ -196,26 +196,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     day: parseInt(block.dataset.day),
                     startTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), startH, startM),
                     endTime: new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM)
+                    
                 };
             })
             .filter(cls => cls.day === todayDay)
             .sort((a, b) => a.startTime - b.startTime);
         let currentClass = allClassesToday.find(cls => now >= cls.startTime && now < cls.endTime);
         let nextClass = allClassesToday.find(cls => now < cls.startTime);
+        // โค้ดใหม่
         if (currentClass) {
             currentClassContainer.classList.remove('hidden');
             const diff = currentClass.endTime - now;
             const { hours, minutes, seconds } = formatTime(diff);
-            currentClassTitle.textContent = `"${currentClass.name}" สิ้นสุดใน`;
+            
+            // **สร้าง HTML ที่มีรายละเอียด**
+            currentClassTitle.innerHTML = `
+                <div class="countdown-subject-info">
+                    <strong>${currentClass.name}<br></strong>
+                    <span>${currentClass.startTime.toTimeString().substring(0, 5)} - ${currentClass.endTime.toTimeString().substring(0, 5)}</span>
+                </div>
+                <small>จะสิ้นสุดใน</small>
+            `;
             currentClassTimer.textContent = `${hours}:${minutes}:${seconds}`;
         } else {
             currentClassContainer.classList.add('hidden');
         }
+
         if (nextClass) {
             nextClassContainer.classList.remove('hidden');
             const diff = nextClass.startTime - now;
             const { hours, minutes, seconds } = formatTime(diff);
-            nextClassTitle.textContent = `"${nextClass.name}" เริ่มใน`;
+
+            // **สร้าง HTML ที่มีรายละเอียด**
+            nextClassTitle.innerHTML = `
+                <div class="countdown-subject-info">
+                    <strong>${nextClass.name}<br></strong>
+                    <span>${nextClass.startTime.toTimeString().substring(0, 5)} - ${nextClass.endTime.toTimeString().substring(0, 5)}</span>
+                </div>
+                <small>จะเริ่มใน</small>
+            `;
             nextClassTimer.textContent = `${hours}:${minutes}:${seconds}`;
         } else {
             nextClassContainer.classList.add('hidden');

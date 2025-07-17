@@ -86,7 +86,6 @@ h1 {
    3. บล็อกรายวิชา (Class Blocks)
    ========================================================================== */
 .class-block {
-    margin-top: 0.6em;
     position: absolute;
     left: 4px;
     width: calc(100% - 8px);

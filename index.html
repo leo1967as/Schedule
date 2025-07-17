@@ -13,7 +13,23 @@
 
     <header>
         <h1>ตารางเรียน ภาคเรียนที่ 1/2568</h1>
-        <button id="add-class-btn" class="button-primary">เพิ่มรายวิชา +</button>
+                <div id="countdown-container" class="countdown-container">
+            <h2 id="countdown-title">กำลังโหลด...</h2>
+                    <div class="info-panel">
+            <!-- 1. บล็อกสำหรับวิชาที่กำลังเรียน (ซ่อนไว้ตอนแรก) -->
+            <div id="current-class-container" class="info-block current hidden">
+                <h2 id="current-class-title">--</h2>
+                <p id="current-class-timer" class="timer-display">--:--:--</p>
+            </div>
+
+            <!-- 2. บล็อกสำหรับวิชาถัดไป (ซ่อนไว้ตอนแรก) -->
+            <div id="next-class-container" class="info-block next hidden">
+                <h2 id="next-class-title">--</h2>
+                <p id="next-class-timer" class="timer-display">--:--:--</p>
+            </div>
+        </div>
+        </div>
+
     </header>
 
     <main>
@@ -93,6 +109,13 @@
         </div>
     </div>
 
+        <!-- ****** ส่วนใหม่: ส่วนควบคุมและ Countdown Timer ****** -->
+    <footer class="page-controls">
+        <!-- 1. บล็อกสำหรับ Countdown -->
+
+        <!-- 2. ปุ่มเพิ่มรายวิชาที่ย้ายมา -->
+        <button id="add-class-btn" class="button-primary">เพิ่มรายวิชา +</button>
+    </footer>
     <!-- *** เพิ่มการเรียกใช้ Interact.js *** -->
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     

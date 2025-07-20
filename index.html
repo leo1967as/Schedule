@@ -13,6 +13,10 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
         <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0056b3"/>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://fcm.googleapis.com; font-src 'self';">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
 </head>
 <body>
 
@@ -162,6 +166,7 @@
         </div>
     </div>
 
+    <div id="loading-overlay" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.95);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:bold;letter-spacing:2px;">Loading...</div>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <!-- Firebase SDK (Compat version) -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -171,7 +176,7 @@
 <!-- Interact.js -->
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <!-- Your App's Script -->
-<script src="scripts/main.js"></script>
+<script type="module" src="scripts/main.js"></script>
 
 <script>               if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

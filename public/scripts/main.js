@@ -12,8 +12,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    window.db = db;
     let messaging = null;
     let swRegistration = null;
+    window.messaging = messaging;
+    window.swRegistration = swRegistration;
 
     // --- 2. ส่วนของ DOM Elements ---
     const loginScreen = document.getElementById('login-screen');
@@ -53,6 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 3. State Variables ---
     let currentUser = null;
+    window.currentUser = currentUser;
     let blockIdCounter = 0;
     let ghostBlock = null;
     let isEditMode = false;
@@ -133,6 +137,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log('FCM Service Worker registered:', swRegistration);
                 messaging = firebase.messaging();
                 messaging.useServiceWorker(swRegistration);
+                window.messaging = messaging;
+                window.swRegistration = swRegistration;
             } catch (err) {
                 console.error('Service Worker registration or FCM setup failed:', err);
             }
@@ -211,6 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             notificationsBtn.disabled = false;
         }
     }
+    window.updateNotificationButtonUI = updateNotificationButtonUI;
 
     // ====== ย้าย unsubscribeNotification ออกนอกสุด ======
     async function unsubscribeNotification() {
@@ -426,6 +433,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateCountdown();
         } else {
             currentUser = localStorage.getItem('currentScheduleAppUser');
+            window.currentUser = currentUser;
             if (currentUser) {
                 loginScreen.style.display = 'none';
                 appContainer.style.display = 'block';

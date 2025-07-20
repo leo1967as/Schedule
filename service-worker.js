@@ -13,7 +13,7 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const messaging = firebase.messaging();
+let messaging = null;
 
 // --- ส่วนของ PWA Caching ---
 const CACHE_NAME = 'my-schedule-app-cache-v4';
@@ -66,3 +66,31 @@ messaging.onBackgroundMessage((payload) => {
   };
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
+
+// --- ส่วนของการจัดการ Notification ---
+let swRegistration = null;
+
+async function setupMessaging() {
+    swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    messaging = firebase.messaging();
+    messaging.useServiceWorker(swRegistration);
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    if ('serviceWorker' in navigator) {
+        await setupMessaging();
+    }
+    // ...init อื่นๆ
+});
+
+async function requestNotificationPermission() {
+    if (!messaging) {
+        alert('Notification system not ready yet. Please try again.');
+        return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+        const currentToken = await messaging.getToken({ vapidKey: 'BDMTIb2DErhAzW9wzREcxfQb-c5vbA39q8OZqQewh-aQtshlT90koKsUVgxezcCwA91HIio1pcqqyaa6ecFOqBk' });
+        // ...save token
+    }
+}

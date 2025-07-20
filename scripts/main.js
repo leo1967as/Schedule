@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const messaging = firebase.messaging();
+    let messaging = null;
+    let swRegistration = null;
 
     // --- 2. ส่วนของ DOM Elements ---
     const loginScreen = document.getElementById('login-screen');
@@ -123,43 +124,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         block.style.height = `${blockHeight - 4}px`;
         targetCell.appendChild(block);
     }
-    const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-    messaging.useServiceWorker(swReg);           // สำหรับ SDK v8
 
     // --- 5. ระบบแจ้งเตือน (Notification System) ---
-async function requestNotificationPermission() {
-    try {
-        Notification.requestPermission().then(async permission => {
-            if (permission === 'granted') {
-                const swReg = await navigator.serviceWorker.ready;
-                messaging.useServiceWorker(swReg);
-                await getTokenAndSave(swReg);
+    async function setupMessagingAndSW() {
+        if ('serviceWorker' in navigator) {
+            try {
+                swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                console.log('FCM Service Worker registered:', swRegistration);
+                messaging = firebase.messaging();
+                messaging.useServiceWorker(swRegistration);
+            } catch (err) {
+                console.error('Service Worker registration or FCM setup failed:', err);
             }
-        }).catch(error => {
-            console.error("Error requesting notification permission: ", error);
-        });
-    } catch (error) {
-        console.error("Error requesting notification permission: ", error);
+        }
     }
-}
 
-    async function getTokenAndSave() {
-                try {
-            if ('serviceWorker' in navigator) {
-                // 'navigator.serviceWorker.ready' คือ Promise ที่จะสมบูรณ์เมื่อ SW พร้อมทำงาน
-                const registration = await navigator.serviceWorker.ready;
-                console.log('Service Worker is active and ready for push notifications:', registration);
+    async function requestNotificationPermission() {
+        if (!messaging || !swRegistration) {
+            alert('Notification system not ready yet. Please try again.');
+            return;
+        }
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                await getTokenAndSave();
             }
         } catch (err) {
-            console.error('Service worker failed to become ready.', err);
+            console.error('Error requesting notification permission: ', err);
+        }
+    }
+
+    async function getTokenAndSave() {
+        if (!messaging || !swRegistration) {
             notificationsBtn.textContent = 'Service Worker มีปัญหา';
             notificationsBtn.disabled = true;
-            return; // ออกจากฟังก์ชันถ้า SW ไม่พร้อม
+            return;
         }
-
         try {
-            const currentToken = await messaging.getToken({ 
-                vapidKey: 'BDMTIb2DErhAzW9wzREcxfQb-c5vbA39q8OZqQewh-aQtshlT90koKsUVgxezcCwA91HIio1pcqqyaa6ecFOqBk' 
+            const currentToken = await messaging.getToken({
+                vapidKey: 'BDMTIb2DErhAzW9wzREcxfQb-c5vbA39q8OZqQewh-aQtshlT90koKsUVgxezcCwA91HIio1pcqqyaa6ecFOqBk',
+                serviceWorkerRegistration: swRegistration
             });
             if (currentToken) {
                 console.log('FCM Token:', currentToken);
@@ -170,6 +174,10 @@ async function requestNotificationPermission() {
                 updateNotificationButtonUI(false);
             }
         } catch (err) {
+            // Dev environment push error hint
+            if (err && err.name === 'AbortError') {
+                alert('Push service error: Web Push API requires HTTPS. Please test on a deployed (https) site.');
+            }
             console.error('An error occurred while retrieving token. ', err);
             notificationsBtn.textContent = 'การแจ้งเตือนมีปัญหา';
             notificationsBtn.disabled = true;
@@ -388,8 +396,9 @@ async function requestNotificationPermission() {
                 initializeDragAndDrop();
                 await loadScheduleFromFirestore(currentUser);
                 
+                // Notification setup
                 if (Notification.permission === 'granted') {
-                    getTokenAndSave();
+                    await getTokenAndSave();
                 } else {
                     updateNotificationButtonUI(false);
                 }
@@ -424,5 +433,8 @@ async function requestNotificationPermission() {
     notificationsBtn.addEventListener('click', requestNotificationPermission);
 
     // ** เริ่มการทำงานของแอปพลิเคชัน **
-    init();
+    (async () => {
+        await setupMessagingAndSW();
+        await init();
+    })();
 });

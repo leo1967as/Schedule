@@ -1,6 +1,22 @@
-const CACHE_NAME = 'my-schedule-app-cache-v3'; // **เปลี่ยนชื่อ Cache อีกครั้งเพื่อบังคับอัปเดต**
+// Import Firebase SDK
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-// **นำ URL ของ Google Fonts ออกไป**
+const firebaseConfig = {
+    apiKey: "AIzaSyC452vdQ6_77OWElN6vvEbAzn_lA4DvPk0",
+    authDomain: "beit67.firebaseapp.com",
+    projectId: "beit67",
+    storageBucket: "beit67.appspot.com",
+    messagingSenderId: "909474812266",
+    appId: "1:909474812266:web:c69149ad52c43085441513",
+    measurementId: "G-SFPMXYCJNG"
+};
+
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+
+// --- ส่วนของ PWA Caching ---
+const CACHE_NAME = 'my-schedule-app-cache-v4';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -8,58 +24,45 @@ const urlsToCache = [
   '/scripts/main.js',
   '/icons/android-chrome-192x192.png',
   '/icons/android-chrome-512x512.png',
-  'https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js',
-  'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js',
-  'https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js'
+  'https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js'
+  // ไม่ต้องแคช Firebase SDK เพราะเรา import มาแล้วในนี้
 ];
 
-// Event: install
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-      .catch(error => {
-        // **เพิ่มการดักจับ Error เพื่อดูว่า URL ไหนคือตัวปัญหา**
-        console.error('Failed to cache URLs during install:', error);
-      })
+    caches.open(CACHE_NAME).then(cache => {
+      console.log('SW: Caching app shell');
+      return cache.addAll(urlsToCache);
+    })
   );
 });
 
-// Event: activate (ลบ cache เก่า)
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.filter(cacheName => {
-          return cacheName.startsWith('my-schedule-app-cache-') && cacheName !== CACHE_NAME;
-        }).map(cacheName => {
-          console.log('Deleting old cache:', cacheName);
-          return caches.delete(cacheName);
-        })
+        cacheNames.filter(name => name.startsWith('my-schedule-app-cache-') && name !== CACHE_NAME)
+          .map(name => caches.delete(name))
       );
     })
   );
 });
 
-// Event: fetch
 self.addEventListener('fetch', event => {
-  // ไม่แคช Google Fonts API requests
-  if (event.request.url.indexOf('https://fonts.googleapis.com') === 0 || 
-      event.request.url.indexOf('https://fonts.gstatic.com') === 0) {
-    return; // ปล่อยให้เบราว์เซอร์จัดการเอง
-  }
-
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      }
-    )
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
   );
+});
+
+// --- ส่วนของ Firebase Messaging ---
+messaging.onBackgroundMessage((payload) => {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  const notificationTitle = payload.notification.title;
+  const notificationOptions = {
+    body: payload.notification.body,
+    icon: '/icons/android-chrome-192x192.png'
+  };
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });

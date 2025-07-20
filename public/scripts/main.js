@@ -212,6 +212,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    async function unsubscribeNotification() {
+        if (!messaging) {
+            alert('Notification system not ready yet.');
+            return;
+        }
+        try {
+            // ลบ token ออกจาก Firestore
+            const currentToken = await messaging.getToken({
+                vapidKey: 'BDMTIb2DErhAzW9wzREcxfQb-c5vbA39q8OZqQewh-aQtshlT90koKsUVgxezcCwA91HIio1pcqqyaa6ecFOqBk',
+                serviceWorkerRegistration: swRegistration
+            });
+            if (currentToken && currentUser) {
+                const userDocRef = db.collection('users').doc(currentUser);
+                await userDocRef.update({
+                    notificationTokens: firebase.firestore.FieldValue.arrayRemove(currentToken)
+                });
+                console.log('Token removed from Firestore.');
+            }
+            // ลบ token จาก FCM
+            await messaging.deleteToken(currentToken);
+            alert('ยกเลิกรับแจ้งเตือนเรียบร้อยแล้ว');
+            updateNotificationButtonUI(false);
+            // Unregister service worker (optional)
+            if (navigator.serviceWorker) {
+                const reg = await navigator.serviceWorker.getRegistration();
+                if (reg) {
+                    // reg.unregister(); // ถ้าต้องการลบ SW ทั้งหมด (แต่จะกระทบ PWA ด้วย)
+                    // ถ้าไม่ต้องการ unregister ทั้งหมด ให้ข้ามบรรทัดนี้
+                }
+            }
+        } catch (err) {
+            console.error('Error unsubscribing notification:', err);
+            alert('เกิดข้อผิดพลาดในการยกเลิกรับแจ้งเตือน');
+        }
+    }
+
     // --- 6. ระบบ Countdown Timer ---
     function updateCountdown() {
         const now = new Date();
@@ -481,5 +517,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var testBtn = document.getElementById('test-notification-btn');
     if (testBtn) {
         testBtn.addEventListener('click', testNotification);
+    }
+    var unsubBtn = document.getElementById('unsubscribe-notification-btn');
+    if (unsubBtn) {
+        unsubBtn.addEventListener('click', unsubscribeNotification);
     }
 });

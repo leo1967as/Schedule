@@ -438,3 +438,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         await init();
     })();
 });
+
+// --- ฟังก์ชันทดสอบ Notification ---
+function testNotification() {
+    if (Notification.permission !== 'granted') {
+        alert('Notification permission is not granted.');
+        return;
+    }
+    // ถ้าใช้ Service Worker (PWA/FCM) ให้ใช้ showNotification ผ่าน SW
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.getRegistration().then(function(reg) {
+            if (reg) {
+                reg.showNotification('🔔 Test Notification', {
+                    body: 'This is a test notification!',
+                    icon: '/icons/android-chrome-192x192.png',
+                    badge: '/icons/android-chrome-192x192.png',
+                });
+            } else {
+                // fallback
+                new Notification('🔔 Test Notification', {
+                    body: 'This is a test notification!',
+                    icon: '/icons/android-chrome-192x192.png',
+                });
+            }
+        });
+    } else {
+        // fallback
+        new Notification('🔔 Test Notification', {
+            body: 'This is a test notification!',
+            icon: '/icons/android-chrome-192x192.png',
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var testBtn = document.getElementById('test-notification-btn');
+    if (testBtn) {
+        testBtn.addEventListener('click', testNotification);
+    }
+});

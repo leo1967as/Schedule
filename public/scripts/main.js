@@ -440,35 +440,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // --- ฟังก์ชันทดสอบ Notification ---
-function testNotification() {
-    if (Notification.permission !== 'granted') {
-        alert('Notification permission is not granted.');
-        return;
-    }
-    // ถ้าใช้ Service Worker (PWA/FCM) ให้ใช้ showNotification ผ่าน SW
-    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.getRegistration().then(function(reg) {
-            if (reg) {
-                reg.showNotification('🔔 Test Notification', {
-                    body: 'This is a test notification!',
-                    icon: '/icons/android-chrome-192x192.png',
-                    badge: '/icons/android-chrome-192x192.png',
-                });
-            } else {
-                // fallback
-                new Notification('🔔 Test Notification', {
-                    body: 'This is a test notification!',
-                    icon: '/icons/android-chrome-192x192.png',
-                });
-            }
-        });
-    } else {
-        // fallback
-        new Notification('🔔 Test Notification', {
-            body: 'This is a test notification!',
-            icon: '/icons/android-chrome-192x192.png',
-        });
-    }
+async function testNotification() {
+  // เรียก Cloud Function
+  await fetch('https://<YOUR_CLOUD_FUNCTION_URL>/sendTestNotification', { method: 'POST' });
+  alert('ส่งแจ้งเตือนไปยังทุกอุปกรณ์แล้ว (ถ้ามี token)');
 }
 
 document.addEventListener('DOMContentLoaded', function() {

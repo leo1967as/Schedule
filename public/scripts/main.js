@@ -248,6 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('เกิดข้อผิดพลาดในการยกเลิกรับแจ้งเตือน');
         }
     }
+    window.unsubscribeNotification = unsubscribeNotification;
 
     // --- 6. ระบบ Countdown Timer ---
     function updateCountdown() {

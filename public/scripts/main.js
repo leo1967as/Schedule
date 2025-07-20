@@ -212,6 +212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // ====== ย้าย unsubscribeNotification ออกมาไว้ข้างนอก ======
     async function unsubscribeNotification() {
         if (!messaging) {
             alert('Notification system not ready yet.');

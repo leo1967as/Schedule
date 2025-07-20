@@ -212,29 +212,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // ====== ย้าย unsubscribeNotification ออกมาไว้ข้างนอก ======
+    // ====== ย้าย unsubscribeNotification ออกนอกสุด ======
     async function unsubscribeNotification() {
-        if (!messaging) {
+        if (!window.messaging) {
             alert('Notification system not ready yet.');
             return;
         }
         try {
             // ลบ token ออกจาก Firestore
-            const currentToken = await messaging.getToken({
+            const currentToken = await window.messaging.getToken({
                 vapidKey: 'BDMTIb2DErhAzW9wzREcxfQb-c5vbA39q8OZqQewh-aQtshlT90koKsUVgxezcCwA91HIio1pcqqyaa6ecFOqBk',
-                serviceWorkerRegistration: swRegistration
+                serviceWorkerRegistration: window.swRegistration
             });
-            if (currentToken && currentUser) {
-                const userDocRef = db.collection('users').doc(currentUser);
+            if (currentToken && window.currentUser) {
+                const userDocRef = window.db.collection('users').doc(window.currentUser);
                 await userDocRef.update({
                     notificationTokens: firebase.firestore.FieldValue.arrayRemove(currentToken)
                 });
                 console.log('Token removed from Firestore.');
             }
             // ลบ token จาก FCM
-            await messaging.deleteToken(currentToken);
+            await window.messaging.deleteToken(currentToken);
             alert('ยกเลิกรับแจ้งเตือนเรียบร้อยแล้ว');
-            updateNotificationButtonUI(false);
+            window.updateNotificationButtonUI(false);
             // Unregister service worker (optional)
             if (navigator.serviceWorker) {
                 const reg = await navigator.serviceWorker.getRegistration();

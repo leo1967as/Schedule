@@ -15,13 +15,13 @@ const hideLoadingOverlay = () => {
 document.addEventListener('DOMContentLoaded', () => {
     // --- 1. การตั้งค่า Firebase ---
     const firebaseConfig = {
-        apiKey: "AIzaSyC452vdQ6_77OWElN6vvEbAzn_lA4DvPk0",
-        authDomain: "beit67.firebaseapp.com",
-        projectId: "beit67",
-        storageBucket: "beit67.appspot.com",
-        messagingSenderId: "909474812266",
-        appId: "1:909474812266:web:c69149ad52c43085441513",
-        measurementId: "G-SFPMXYCJNG"
+        apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+        appId: import.meta.env.VITE_FIREBASE_APP_ID,
+        measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
     };
 
     firebase.initializeApp(firebaseConfig);

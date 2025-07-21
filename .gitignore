@@ -1,0 +1,17 @@
+# Node/Vite/JS/Frontend
+node_modules/
+dist/
+build/
+
+# Env/Secrets
+.env
+.env.*
+.env.local
+
+# Vercel/Netlify/Deploy
+.vercel/
+.netlify/
+
+# System
+.DS_Store
+Thumbs.db 

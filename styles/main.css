@@ -1,7 +1,7 @@
 /* ==========================================================================
    1. การตั้งค่าทั่วไปและ Typography
    ========================================================================== */
-body {
+   body {
     font-family: 'Sarabun', sans-serif;
     background-color: #f7f9fc;
     color: #333;
@@ -505,4 +505,17 @@ h1 {
     background-color: #e9ecef;
     color: #6c757d;
     cursor: not-allowed;
+}
+
+#cancel-notifications-btn {
+    background-color: #dc3545;
+  margin-left: 8px;
+}
+
+#test-noti-btn {
+  margin-left: 8px;
+}
+
+#test-random-noti-btn {
+  margin-left: 8px;
 }
